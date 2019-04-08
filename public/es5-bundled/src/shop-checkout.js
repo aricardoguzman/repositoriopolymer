@@ -376,7 +376,6 @@ define(["./shop-app.js"],function(_shopApp){"use strict";const $_documentContain
 
               <header class="subsection" visible$="[[_hasItems]]">
                 <h1>Pagar</h1>
-                <span>Función aún sin implementar</span>
               </header>
 
               <div class="subsection grid" visible$="[[_hasItems]]">
@@ -664,4 +663,51 @@ define(["./shop-app.js"],function(_shopApp){"use strict";const $_documentContain
 
     <!-- Show spinner when waiting for the server to repond -->
     <paper-spinner-lite active="[[waiting]]"></paper-spinner-lite>
-    `}static get is(){return"shop-checkout"}static get properties(){return{route:{type:Object,notify:!0},total:Number,state:{type:String,value:"init"},cart:Array,response:Object,hasBillingAddress:{type:Boolean,value:!1},visible:{type:Boolean,observer:"_visibleChanged"},waiting:{type:Boolean,readOnly:!0,reflectToAttribute:!0},_hasItems:{type:Boolean,computed:"_computeHasItem(cart.length)"}}}static get observers(){return["_updateState(routeActive, routeData)"]}_submit(e){if(this._validateForm()){this.$.checkoutForm.dispatchEvent(new CustomEvent("iron-form-presubmit",{composed:!0}));this._submitFormDebouncer=_shopApp.Debouncer.debounce(this._submitFormDebouncer,_shopApp.timeOut.after(1e3),()=>{this.$.checkoutForm.dispatchEvent(new CustomEvent("iron-form-response",{composed:!0,detail:{response:{success:1,successMessage:"Demo checkout process complete."}}}))})}}_pushState(state){this._validState=state;this.set("route.path",state)}_updateState(active,routeData){if(active&&routeData){let state=routeData.state;if(this._validState===state){this.state=state;this._validState="";return}}this.state="init"}_reset(){let form=this.$.checkoutForm;this._setWaiting(!1);form.reset&&form.reset();let nativeForm=form._form;if(!nativeForm){return}for(let el,i=0;el=nativeForm.elements[i],i<nativeForm.elements.length;i++){el.removeAttribute("aria-invalid")}}_validateForm(){let form=this.$.checkoutForm,firstInvalid=!1,nativeForm=form._form;for(let el,i=0;el=nativeForm.elements[i],i<nativeForm.elements.length;i++){if(el.checkValidity()){el.removeAttribute("aria-invalid")}else{if(!firstInvalid){if(el.nextElementSibling){this.dispatchEvent(new CustomEvent("announce",{bubbles:!0,composed:!0,detail:el.nextElementSibling.getAttribute("error-message")}))}if(el.scrollIntoViewIfNeeded){el.scrollIntoViewIfNeeded()}else{el.scrollIntoView(!1)}el.focus();firstInvalid=!0}el.setAttribute("aria-invalid","true")}}return!firstInvalid}_willSendRequest(e){let form=e.target,body=form.request&&form.request.body;this._setWaiting(!0);if(!body){return}body.cartItemsId=[];body.cartItemsQuantity=[];this.cart.forEach(cartItem=>{body.cartItemsId.push(cartItem.item.name);body.cartItemsQuantity.push(cartItem.quantity)})}_didReceiveResponse(e){let response=e.detail.response;this.response=response;this._setWaiting(!0);if(response.success){this._pushState("success");this._reset();this.dispatchEvent(new CustomEvent("clear-cart",{bubbles:!0,composed:!0}))}else{this._pushState("error")}}_toggleBillingAddress(e){this.hasBillingAddress=e.target.checked;if(this.hasBillingAddress){this.$.billAddress.focus()}}_computeHasItem(cartLength){return 0<cartLength}_formatPrice(total){return isNaN(total)?"":"$"+total.toFixed(2)}_getEntryTotal(entry){return this._formatPrice(entry.quantity*entry.item.price)}_visibleChanged(visible){if(!visible){return}this._reset();this.dispatchEvent(new CustomEvent("change-section",{bubbles:!0,composed:!0,detail:{title:"Checkout"}}))}}customElements.define(ShopCheckout.is,ShopCheckout)});
+    `}static get is(){return"shop-checkout"}static get properties(){return{/**
+       * The route for the state. e.g. `success` and `error` are mounted in the
+       * `checkout/` route.
+       */route:{type:Object,notify:!0},/**
+       * The total price of the contents in the user's cart.
+       */total:Number,/**
+       * The state of the form. Valid values are:
+       * `init`, `success` and `error`.
+       */state:{type:String,value:"init"},/**
+       * An array containing the items in the cart.
+       */cart:Array,/**
+       * The server's response.
+       */response:Object,/**
+       * If true, the user must enter a billing address.
+       */hasBillingAddress:{type:Boolean,value:!1},/**
+       * If true, shop-checkout is currently visible on the screen.
+       */visible:{type:Boolean,observer:"_visibleChanged"},/**
+       * True when waiting for the server to repond.
+       */waiting:{type:Boolean,readOnly:!0,reflectToAttribute:!0},/**
+       * True when waiting for the server to repond.
+       */_hasItems:{type:Boolean,computed:"_computeHasItem(cart.length)"}}}static get observers(){return["_updateState(routeActive, routeData)"]}_submit(e){if(this._validateForm()){/*this.$.checkoutForm.dispatchEvent(new CustomEvent('iron-form-presubmit', {
+        composed: true}));*/let body=this.$.checkoutForm.serializeForm();body.cartItemsId=[];body.cartItemsQuantity=[];this.cart.forEach(cartItem=>{body.cartItemsId.push(cartItem.item.name);body.cartItemsQuantity.push(cartItem.quantity)});console.log(body);this._fetchQuery("/api/data/order","POST",body).then(()=>{this.$.checkoutForm.dispatchEvent(new CustomEvent("iron-form-response",{composed:!0,detail:{response:{success:1,successMessage:"Demo checkout process complete."}}}))})}}/**
+     * Sets the valid state and updates the location.
+     */_pushState(state){this._validState=state;this.set("route.path",state)}/**
+     * Checks that the `:state` subroute is correct. That is, the state has been pushed
+     * after receiving response from the server. e.g. Users can only go to `/checkout/success`
+     * if the server responsed with a success message.
+     */_updateState(active,routeData){if(active&&routeData){let state=routeData.state;if(this._validState===state){this.state=state;this._validState="";return}}this.state="init"}/**
+     * Sets the initial state.
+     */_reset(){let form=this.$.checkoutForm;this._setWaiting(!1);form.reset&&form.reset();let nativeForm=form._form;if(!nativeForm){return}// Remove the `aria-invalid` attribute from the form inputs.
+for(let el,i=0;el=nativeForm.elements[i],i<nativeForm.elements.length;i++){el.removeAttribute("aria-invalid")}}/**
+     * Validates the form's inputs and adds the `aria-invalid` attribute to the inputs
+     * that don't match the pattern specified in the markup.
+     */_validateForm(){let form=this.$.checkoutForm,firstInvalid=!1,nativeForm=form._form;for(let el,i=0;el=nativeForm.elements[i],i<nativeForm.elements.length;i++){if(el.checkValidity()){el.removeAttribute("aria-invalid")}else{if(!firstInvalid){// announce error message
+if(el.nextElementSibling){this.dispatchEvent(new CustomEvent("announce",{bubbles:!0,composed:!0,detail:el.nextElementSibling.getAttribute("error-message")}))}if(el.scrollIntoViewIfNeeded){// safari, chrome
+el.scrollIntoViewIfNeeded()}else{// firefox, edge, ie
+el.scrollIntoView(!1)}el.focus();firstInvalid=!0}el.setAttribute("aria-invalid","true")}}return!firstInvalid}/**
+     * Adds the cart data to the payload that will be sent to the server
+     * and updates the UI to reflect the waiting state.
+     */_willSendRequest(e){let form=e.target,body=form.request&&form.request.body;this._setWaiting(!0);if(!body){return}// Populate the request body where `cartItemsId[i]` is the ID and `cartItemsQuantity[i]`
+// is the quantity for some item `i`.
+body.cartItemsId=[];body.cartItemsQuantity=[];this.cart.forEach(cartItem=>{body.cartItemsId.push(cartItem.item.name);body.cartItemsQuantity.push(cartItem.quantity)})}/**
+     * Handles the response from the server by checking the response status
+     * and transitioning to the success or error UI.
+     */_didReceiveResponse(e){let response=e.detail.response;this.response=response;this._setWaiting(!0);if(response.success){this._pushState("success");this._reset();this.dispatchEvent(new CustomEvent("clear-cart",{bubbles:!0,composed:!0}))}else{this._pushState("error")}}_toggleBillingAddress(e){this.hasBillingAddress=e.target.checked;if(this.hasBillingAddress){this.$.billAddress.focus()}}_computeHasItem(cartLength){return 0<cartLength}_formatPrice(total){return isNaN(total)?"":"$"+total.toFixed(2)}_getEntryTotal(entry){return this._formatPrice(entry.quantity*entry.item.price)}_visibleChanged(visible){if(!visible){return}// Reset the UI states
+this._reset();// Notify the page's title
+this.dispatchEvent(new CustomEvent("change-section",{bubbles:!0,composed:!0,detail:{title:"Checkout"}}))}_fetchQuery(url,method,body){return new Promise(async(solve,reject)=>{const headers=new Headers({Accept:"application/json","Content-Type":"application/json"});//firebase.auth().currentUser && headers.append('Authorization','Bearer '+ await firebase.auth().currentUser.getIdToken().then((data =>{ return data; })) );
+fetch(url,{method:method,body:JSON.stringify(body),headers:headers}).then(response=>{if(!response.ok){reject(response)}solve(response.json())}).catch(err=>{reject(err)})})}}customElements.define(ShopCheckout.is,ShopCheckout)});

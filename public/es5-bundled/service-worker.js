@@ -37,7 +37,7 @@
 /* eslint-disable indent, no-unused-vars, no-multiple-empty-lines, max-nested-callbacks, space-before-function-paren, quotes, comma-spacing */
 'use strict';
 
-var precacheConfig = [["index.html","50b500f1a2cc5a640390f85fd8779ea2"],["manifest.json","0cc1a5cb84008a7fd3c1df0825df47d4"],["src/lazy-resources.js","b7922a9904b7287acc7f881bdd73334f"],["src/shop-app.js","9a444ed91299ec2b75fdfab7eaae3e17"],["src/shop-cart.js","dfc462be3a0e6a5b976079b5a6c3225f"],["src/shop-checkout.js","6ecd49f78c78442edd16b0417d7bb652"],["src/shop-detail.js","98816d9d9da71ed2a8cd13e581fd9da4"],["src/shop-list.js","b83b55818b787d92c83644e3df683da4"]];
+var precacheConfig = [["index.html","50b500f1a2cc5a640390f85fd8779ea2"],["manifest.json","0cc1a5cb84008a7fd3c1df0825df47d4"],["src/lazy-resources.js","575b30ab32a40944110c6a99e00d8074"],["src/shop-app.js","4eb370777b01996a191a7062e9a149b3"],["src/shop-cart.js","d35c439ff2e2a43f47337b15c5e7fd7c"],["src/shop-checkout.js","78d8a0a7a829eddee794595ba9eaaf22"],["src/shop-detail.js","4d3ef42e6510bf7222c3dbba74ac0bd5"],["src/shop-list.js","be70b14c0499548dff41d450ab6a8482"]];
 var cacheName = 'sw-precache-v3--' + (self.registration ? self.registration.scope : '');
 
 
